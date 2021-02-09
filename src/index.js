@@ -10,12 +10,23 @@ const ramenRating = document.querySelector("#rating")
 const newRamenForm = document.querySelector("#new-ramen")
 const ramenComment = document.querySelector("#comment")
 const deleteButton = document.querySelector("#delete")
+let firstMenuId
 
 const ramenUrl = "http://localhost:3000/ramens"
 
-fetch(ramenUrl)
-.then(response => response.json())
-.then(ramenData => ramenData.forEach(dish => makeMenuItem(dish)))
+function makeMenu() {
+  fetch(ramenUrl)
+  .then(response => response.json())
+  .then(ramenData => ramenData.forEach(dish => {
+    makeMenuItem(dish)
+    updateMenuId()
+    fetchItem(firstMenuId)
+  }))
+}
+
+function updateMenuId () {
+  firstMenuId = menu.firstElementChild.dataset.id
+}
 
 function makeMenuItem(dish){
     let dishImage = document.createElement("img")
@@ -26,7 +37,7 @@ function makeMenuItem(dish){
     menu.append(dishImage)
 }
 
-function fetchItem(id = 1){
+function fetchItem(id){
     // const itemId = event.target.dataset.id || 1
         fetch(ramenUrl + `/${id}`)
         .then(response => response.json())
@@ -86,19 +97,21 @@ function createNewItem(newItem){
 
 function deleteItem(event){
     let itemId = event.target.dataset.id
-    let nextId = itemId == 1 ? itemId +1 : itemId -1
+    let nextId = itemId == firstMenuId ? parseInt(itemId) + 1 : parseInt(itemId) - 1
     let configObject = {
         method: "DELETE"
     }
-    // fetch(ramenUrl + `/${itemId}`, configObject)
-    // .then(fetchItem(nextId))
-
-    Array.from(menu.children).find(dish => dish.dataset.id == itemId).remove()
+    fetch( ramenUrl + `/${itemId}`, configObject)
+    .then( response => response.json() )
+    .then ( data => {
+      fetchItem(nextId)
+      Array.from(menu.children).find(dish => dish.dataset.id == itemId).remove()
+    }) 
 }
 
 
+makeMenu()
 
-fetchItem()
 menu.addEventListener("click", event => {
     if (event.target.className === "dish"){
         fetchItem(event.target.dataset.id)
